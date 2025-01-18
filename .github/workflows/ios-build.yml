@@ -1,0 +1,42 @@
+name: Build iOS App
+
+on:
+  push:
+    branches:
+      - main   # uruchom workflow po pushu na gałąź main
+  pull_request:
+    branches:
+      - main   # uruchom workflow po pull request na gałąź main
+
+jobs:
+  build:
+    runs-on: macos-latest  # musisz użyć runnera macOS
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Pobiera kod repozytorium
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7   # Ustaw wersję Ruby, której używasz
+
+      - name: Install dependencies
+        run: |
+          gem install cocoapods   # Instalacja CocoaPods
+          pod install             # Instalacja zależności iOS (jeśli masz Podfile)
+
+      - name: Install dependencies with yarn (optional)
+        run: yarn install        # Instalacja zależności frontendowych (jeśli masz React Native)
+
+      - name: Build the app
+        run: |
+          xcodebuild -workspace YourApp.xcworkspace -scheme YourScheme -sdk iphoneos -configuration Release
+
+      - name: Archive iOS app
+        run: |
+          xcodebuild archive -workspace YourApp.xcworkspace -scheme YourScheme -archivePath $PWD/build/YourApp.xcarchive
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive -archivePath $PWD/build/YourApp.xcarchive -exportPath $PWD/build -exportOptionsPlist exportOptions.plist
